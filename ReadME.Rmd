@@ -1,6 +1,6 @@
 ---
 title: "ReadMe"
-author: "Me"
+author: "ncwBSoh"
 date: "1/25/2022"
 output: html_document
 ---
@@ -8,23 +8,53 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+  
+### 1. Loading Data
 
-## R Markdown
+```{r Load}
+Data = read.csv("activity.csv")
+```
+  
+### 2. Histogram of Total Steps
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r HistogramTotSteps}
+sumDataDate = aggregate(Data$steps, by = list(Data$date), FUN = sum, na.rm = TRUE)
+hist(sumDataDate$x, xlab = "steps per day", main = "Histogram of total steps per day", breaks = 20)
 ```
 
-## Including Plots
+### 3. Median and Mean Total Steps
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r MedianMeanTotSteps}
+median(sumDataDate$x, na.rm = TRUE)
+mean(sumDataDate$x, na.rm = TRUE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### 4. Time-Series Plot of Average Steps by Interval
+
+```{r Time plot}
+meanDataInter = aggregate(Data$steps, by = list(Data$interval), FUN = mean, na.rm = TRUE)
+plot(meanDataInter$Group.1, meanDataInter$x, type = "l", xlab = "5-minute Intervals", ylab = "Average number of steps")
+```
+
+### 5. Interval With Maximum Number of Steps on Average
+
+```{r Max Step Interval}
+meanDataInter[which(meanDataInter$x == max(meanDataInter$x)),]$Group.1
+```
+
+### 6. Description and Showing Strategy for Imputing Missing Values
+
+Here are the total missing values:
+```{r Total Missing vals}
+sum(is.na(Data))
+```
+
+To deal with this, I decide to fill each missing value with the mean for that 5-minute interval.
+```{r Imputed Dataset}
+imputeData = Data
+#Get the vector of intervals with missing steps
+naIntervals = imputeData$interval[is.na(imputeData$steps)]
+#Impute the missing values with mean interval value by checking where the intervals are the same
+imputeData$steps[is.na(imputeData$steps)] = meanDataInter$x[which(meanDataInter$Group.1 == naIntervals)]
+head(imputeData)
+```
